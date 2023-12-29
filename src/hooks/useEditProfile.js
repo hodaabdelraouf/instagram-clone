@@ -1,54 +1,53 @@
-import { useState } from "react"
-import useAuthStore from "../store/authStore"
-import { firestore, storage } from "../firebase/firebase"
-import { getDownloadURL, ref, uploadString } from "firebase/storage"
-import { doc, updateDoc } from "firebase/firestore"
-import useShowToast from "./useShowToast"
-import useUserProfileStore from "../store/userProfileStore"
+import { useState } from "react";
+import useAuthStore from "../store/authStore";
+import useShowToast from "./useShowToast";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import { firestore, storage } from "../firebase/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import useUserProfileStore from "../store/userProfileStore";
 
 const useEditProfile = () => {
- const [isUpdating, setIsUpdating] = useState(false)
+	const [isUpdating, setIsUpdating] = useState(false);
 
- const authUser = useAuthStore((state) => state.user)
- const setAuthUser = useAuthStore((state) => state.setUser)
- const setUserProfile = useUserProfileStore((state) => state.setUserProfile)
- 
- const showToast = useShowToast()
+	const authUser = useAuthStore((state) => state.user);
+	const setAuthUser = useAuthStore((state) => state.setUser);
+	const setUserProfile = useUserProfileStore((state) => state.setUserProfile);
 
- const editProfile = async(inputs, selectedFile) => {
-   if(isUpdating || !authUser) return
-   setIsUpdating(true)
+	const showToast = useShowToast();
 
-   const storageRef = ref(storage, `profilePics/${authUser.uid}`)
-   const userDocRef = doc(firestore, "users", authUser.uid)
+	const editProfile = async (inputs, selectedFile) => {
+		if (isUpdating || !authUser) return;
+		setIsUpdating(true);
 
-   let URL = ""
-   try {
-    if(selectedFile) {
-      await uploadString(storageRef, selectedFile, "data_url")
-      URL = await getDownloadURL(ref(storage, `profilePics/${authUser.uid}`))
-    }
+		const storageRef = ref(storage, `profilePics/${authUser.uid}`);
+		const userDocRef = doc(firestore, "users", authUser.uid);
 
-    const updatedUser = {
-      ...authUser,
-      fullName:inputs.fullName || authUser.fullName,
-      username:inputs.username || authUser.username,
-      bio:inputs.bio || authUser.bio,
-      profilePicURL:URL || authUser.profilePicURL
-    }
+		let URL = "";
+		try {
+			if (selectedFile) {
+				await uploadString(storageRef, selectedFile, "data_url");
+				URL = await getDownloadURL(ref(storage, `profilePics/${authUser.uid}`));
+			}
 
-    await updateDoc(userDocRef, updatedUser)
-    localStorage.setItem("user-info",JSON.stringify(updatedUser))
-    setAuthUser(updatedUser)
-    setUserProfile(updatedUser)
-    showToast("Success", "Profile updated successfully","success")
+			const updatedUser = {
+				...authUser,
+				fullName: inputs.fullName || authUser.fullName,
+				username: inputs.username || authUser.username,
+				bio: inputs.bio || authUser.bio,
+				profilePicURL: URL || authUser.profilePicURL,
+			};
 
-   } catch (error) {
-      showToast("Error",error.message, "error")
-   }
- }
+			await updateDoc(userDocRef, updatedUser);
+			localStorage.setItem("user-info", JSON.stringify(updatedUser));
+			setAuthUser(updatedUser);
+			setUserProfile(updatedUser);
+			showToast("Success", "Profile updated successfully", "success");
+		} catch (error) {
+			showToast("Error", error.message, "error");
+		}
+	};
 
-  return {editProfile, isUpdating}
-}
+	return { editProfile, isUpdating };
+};
 
-export default useEditProfile
+export default useEditProfile;

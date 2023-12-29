@@ -1,38 +1,41 @@
-import { useEffect, useState } from "react"
-import useShowToast from "./useShowToast"
-import { firestore } from "../firebase/firebase"
-import { collection, getDocs, query, where } from "firebase/firestore"
-import useUserProfileStore from "../store/userProfileStore"
+import { useEffect, useState } from "react";
+import useShowToast from "./useShowToast";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { firestore } from "../firebase/firebase";
+import useUserProfileStore from "../store/userProfileStore";
 
 const useGetUserProfileByUsername = (username) => {
-  const [isLoading, setIsLoading] = useState(true)
-  const showToast = useShowToast()
-  const {userProfile, setUserProfile} = useUserProfileStore()
+	const [isLoading, setIsLoading] = useState(true);
+	const showToast = useShowToast();
+	const { userProfile, setUserProfile } = useUserProfileStore();
 
-  useEffect(() => {
-     const getUserProfile = async() => {
-        setIsLoading(true)
-        try {
-            const q = query(collection(firestore,"users"),where("username", "==", "username"))
-            const querySnapshot = await getDocs(q)
+	useEffect(() => {
+		const getUserProfile = async () => {
+			setIsLoading(true);
+			try {
+				const q = query(collection(firestore, "users"), where("username", "==", username));
+				const querySnapshot = await getDocs(q);
 
-            if(querySnapshot.empty) return setUserProfile(null)
-            let userDoc
-            querySnapshot.forEach((doc) => {
-                userDoc = doc.data()
-            })
+				if (querySnapshot.empty) return setUserProfile(null);
 
-            setUserProfile(userDoc)
-        } catch (error) {
-            showToast("Error", error.message, "error")
-        } finally {
-            setIsLoading(false)
-        }
-     }
-     getUserProfile()
-  }, [setUserProfile, username, showToast])
+				let userDoc;
+				querySnapshot.forEach((doc) => {
+					userDoc = doc.data();
+				});
 
-  return { isLoading, userProfile }
-}
+				setUserProfile(userDoc);
+				console.log(userDoc);
+			} catch (error) {
+				showToast("Error", error.message, "error");
+			} finally {
+				setIsLoading(false);
+			}
+		};
 
-export default useGetUserProfileByUsername
+		getUserProfile();
+	}, [setUserProfile, username, showToast]);
+
+	return { isLoading, userProfile };
+};
+
+export default useGetUserProfileByUsername;
